@@ -6,10 +6,47 @@
   <style>
     body { font-family: sans-serif; margin: 20px; background: #e0f7fa; }
     h1, p { text-align: center; margin-bottom: 12px; }
-    table { width: 100%; background: #fff; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; white-space: nowrap; }
-    th { background: #f5f5f5; cursor: pointer; }
-    a { color: inherit; text-decoration: none; }
+
+    table {
+      width: 100%;
+      background: #fff;
+      border-collapse: collapse;
+      margin-top: 20px;
+      table-layout: fixed;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      position: relative; /* ソートアイコン用 */
+    }
+    th {
+      background: #f5f5f5;
+      cursor: pointer;
+      user-select: none;
+    }
+    /* ソートアイコン */
+    .sort-icon {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.8em;
+      color: #1e90ff;
+      display: none;
+    }
+    th.asc .sort-icon.asc,
+    th.desc .sort-icon.desc {
+      display: inline;
+    }
+    /* リンク色 */
+    td a {
+      color: #0066ff;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -19,10 +56,22 @@
   <table id="tocTable">
     <thead>
       <tr>
-        <th data-key="name">名前</th>
-        <th data-key="status">ステータス</th>
-        <th data-key="dt">最終チャレンジ</th>
-        <th data-key="hs">ハイスコア</th>
+        <th data-key="name">
+          名前
+          <span class="sort-icon asc">▲</span><span class="sort-icon desc">▼</span>
+        </th>
+        <th data-key="status">
+          ステータス
+          <span class="sort-icon asc">▲</span><span class="sort-icon desc">▼</span>
+        </th>
+        <th data-key="dt">
+          最終チャレンジ
+          <span class="sort-icon asc">▲</span><span class="sort-icon desc">▼</span>
+        </th>
+        <th data-key="hs">
+          ハイスコア
+          <span class="sort-icon asc">▲</span><span class="sort-icon desc">▼</span>
+        </th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -39,50 +88,84 @@
       { file: 'drills/七の段の九九（ばらばら）.html', name: '七の段の九九（ばらばら）', ns: 'multiplication7dan_v1_' },
       { file: 'drills/八の段の九九（ばらばら）.html', name: '八の段の九九（ばらばら）', ns: 'multiplication8dan_v1_' },
       { file: 'drills/九の段の九九（ばらばら）.html', name: '九の段の九九（ばらばら）', ns: 'multiplication9dan_v1_' },
-      { file: 'drills/九九.html', name: '九九 (総合ドリル)', ns: 'multiplication_1to9_v6_' }
+      { file: 'drills/九九.html',                 name: '九九 (総合ドリル)',        ns: 'multiplication_1to9_v6_' }
     ];
 
-    const list = drills.map(d => {
-      const hs = localStorage.getItem(d.ns + 'highScore') || '―';
-      const historyJSON = localStorage.getItem(d.ns + 'history') || '[]';
-      let status = '―', dt = '―';
-      try {
-        const arr = JSON.parse(historyJSON);
-        if (arr.length > 0) {
-          status = arr[0].status || status;
-          dt = arr[0].datetime || dt;
-        }
-      } catch (e) {}
-      return { file: d.file, name: d.name, status, dt, hs };
-    });
-
-    let sort = { key: 'name', dir: 'asc' };
-    const tbody = document.querySelector('#tocTable tbody');
-
-    window.onload = () => {
-      attachSortHandlers();
-      render();
-    };
-
-    function attachSortHandlers() {
-      document.querySelectorAll('th[data-key]').forEach(th => {
-        th.addEventListener('click', () => {
-          const key = th.getAttribute('data-key');
-          if (sort.key === key) sort.dir = sort.dir === 'asc' ? 'desc' : 'asc';
-          else { sort.key = key; sort.dir = 'asc'; }
-          render();
-        });
+    // localStorage から読み込み
+    function loadData() {
+      return drills.map(d => {
+        const hist = JSON.parse(localStorage.getItem(d.ns + 'history') || '[]');
+        const hs   = localStorage.getItem(d.ns + 'highScore') || '―';
+        return {
+          file:  d.file,
+          name:  d.name,
+          status: hist[0]?.status || '―',
+          dt:     hist[0]?.datetime || '―',
+          hs
+        };
       });
     }
 
-    function render() {
-      const data = [...list].sort((a, b) => {
-        const v1 = a[sort.key], v2 = b[sort.key];
-        if (sort.key === 'hs') {
-          return (sort.dir === 'asc' ? 1 : -1) * ((+v1 || 0) - (+v2 || 0));
-        }
-        return (sort.dir === 'asc' ? 1 : -1) * v1.localeCompare(v2, 'ja');
+    let list = loadData();
+    let sortState = { key: 'name', dir: 'asc' };
+    const tbody = document.querySelector('#tocTable tbody');
+
+    window.onload = () => {
+      attachSorting();
+      render();
+    };
+
+    // 列ヘッダークリックでソート
+    function attachSorting() {
+      document.querySelectorAll('th[data-key]').forEach(th => {
+        th.addEventListener('click', () => {
+          const key = th.dataset.key;
+          if (sortState.key === key) {
+            sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+          } else {
+            sortState.key = key;
+            sortState.dir = 'asc';
+          }
+          updateSortIcons();
+          render();
+        });
       });
+
+      // localStorage が別タブで更新されたとき
+      window.addEventListener('storage', e => {
+        if (e.key && /(highScore|history)$/.test(e.key)) {
+          list = loadData();
+          render();
+        }
+      });
+      // タブにフォーカス戻ったときも最新化
+      window.addEventListener('focus', () => {
+        list = loadData();
+        render();
+      });
+    }
+
+    // ▲▽ アイコン表示更新
+    function updateSortIcons() {
+      document.querySelectorAll('th[data-key]').forEach(th => {
+        th.classList.remove('asc','desc');
+        if (th.dataset.key === sortState.key) {
+          th.classList.add(sortState.dir);
+        }
+      });
+    }
+
+    // 表示
+    function render() {
+      const data = [...list].sort((a,b) => {
+        const k = sortState.key;
+        let v1 = a[k], v2 = b[k];
+        if (k === 'hs') {
+          return (sortState.dir==='asc'?1:-1) * ((+v1 || 0) - (+v2 || 0));
+        }
+        return (sortState.dir==='asc'?1:-1) * v1.localeCompare(v2, 'ja');
+      });
+
       tbody.innerHTML = '';
       data.forEach(item => {
         const tr = document.createElement('tr');
