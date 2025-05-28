@@ -10,6 +10,13 @@
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; white-space: nowrap; }
     th { background: #f5f5f5; cursor: pointer; user-select: none; }
     a { color: #0066cc; text-decoration: underline; }
+    /* ステータス色設定 */
+    .status-S { color: gold; font-weight: bold; }
+    .status-A { color: red; font-weight: bold; }
+    .status-B { color: green; font-weight: bold; }
+    .status-C { color: blue; font-weight: bold; }
+    .status-D { color: black; font-weight: bold; }
+    .status-― { color: #333; font-weight: normal; }
   </style>
 </head>
 <body>
@@ -108,7 +115,7 @@
           <td>${item.grade}</td>
           <td>${item.category}</td>
           <td><a href="${item.file}" target="_blank">${item.name}</a></td>
-          <td>${item.status}</td>
+          <td><span class="status-${item.status}">${item.status}</span></td>
           <td>${item.dt}</td>
           <td>${item.hs}</td>
           <td>${item.clears}</td>
