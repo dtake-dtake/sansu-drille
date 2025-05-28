@@ -1,8 +1,11 @@
+---
+layout: none
+---
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>算数学習アプリ 目次</title>
+  <title>算数学習アプリ</title>
   <style>
     body { font-family: sans-serif; margin: 20px; background: #e0f7fa; }
     h1, p { text-align: center; margin-bottom: 12px; }
@@ -10,7 +13,6 @@
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; white-space: nowrap; }
     th { background: #f5f5f5; cursor: pointer; user-select: none; }
     a { color: #0066cc; text-decoration: underline; }
-    /* ステータス色設定 */
     .status-S { color: gold; font-weight: bold; }
     .status-A { color: red; font-weight: bold; }
     .status-B { color: green; font-weight: bold; }
@@ -39,32 +41,34 @@
   </table>
 
   <script>
+    // Liquid で drills 配列を自動生成
     const drills = [
-      { file: 'drills/一の段の九九（ばらばら）.html', name: '一の段の九九（ばらばら）', ns: 'multiplication1dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/二の段の九九（ばらばら）.html', name: '二の段の九九（ばらばら）', ns: 'multiplication2dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/三の段の九九（ばらばら）.html', name: '三の段の九九（ばらばら）', ns: 'multiplication3dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/四の段の九九（ばらばら）.html', name: '四の段の九九（ばらばら）', ns: 'multiplication4dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/五の段の九九（ばらばら）.html', name: '五の段の九九（ばらばら）', ns: 'multiplication5dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/六の段の九九（ばらばら）.html', name: '六の段の九九（ばらばら）', ns: 'multiplication6dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/七の段の九九（ばらばら）.html', name: '七の段の九九（ばらばら）', ns: 'multiplication7dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/八の段の九九（ばらばら）.html', name: '八の段の九九（ばらばら）', ns: 'multiplication8dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/九の段の九九（ばらばら）.html', name: '九の段の九九（ばらばら）', ns: 'multiplication9dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/九九.html', name: '九九 (総合ドリル)', ns: 'multiplication_1to9_v6_', grade:'2年', category:'九九' }
+    {% for f in site.static_files %}
+      {% if f.path contains 'drills/' and f.extname == '.html' %}
+    {
+      file: "{{ f.path | remove_first: '/' }}",
+      name: "{{ f.name | remove: '.html' }}",
+      grade: "{{ f.data.grade | default: '―' }}",
+      category: "{{ f.data.category | default: '―' }}",
+      ns: "{{ f.data.ns | default: '' }}"
+    }{% unless forloop.last %},{% endunless %}
+      {% endif %}
+    {% endfor %}
     ];
 
+    // ローカルストレージからステータス・日時・スコアを読み込み
     const statusOrder = { 'S':5, 'A':4, 'B':3, 'C':2, 'D':1, '―':0 };
     const list = drills.map(d => {
       const hs = localStorage.getItem(d.ns + 'highScore') || '―';
       const clears = localStorage.getItem(d.ns + 'clearCount') || '0';
-      const historyJSON = localStorage.getItem(d.ns + 'history') || '[]';
       let status = '―', dt = '―';
       try {
-        const arr = JSON.parse(historyJSON);
-        if (arr.length > 0) {
+        const arr = JSON.parse(localStorage.getItem(d.ns + 'history') || '[]');
+        if (arr.length) {
           status = arr[0].status || status;
           dt = arr[0].datetime || dt;
         }
-      } catch (e) {}
+      } catch {};
       return { grade: d.grade, category: d.category, name: d.name, file: d.file, status, dt, hs, clears };
     });
 
@@ -72,40 +76,24 @@
     const tbody = document.querySelector('#tocTable tbody');
 
     window.onload = () => {
-      attachSortHandlers();
-      render();
-    };
-
-    function attachSortHandlers() {
       document.querySelectorAll('th[data-key]').forEach(th => {
         th.addEventListener('click', () => {
           const key = th.getAttribute('data-key');
-          if (sort.key === key && sort.dir) {
-            sort.dir = sort.dir === 'asc' ? 'desc' : 'asc';
-          } else {
-            sort.key = key;
-            sort.dir = 'desc';
-          }
+          sort.dir = (sort.key === key && sort.dir) ? (sort.dir === 'asc' ? 'desc' : 'asc') : 'desc';
+          sort.key = key;
           render();
         });
       });
-    }
+      render();
+    };
 
     function render() {
       const data = [...list].sort((a, b) => {
-        const v1 = a[sort.key], v2 = b[sort.key];
-        let cmp = 0;
-        if (sort.key === 'hs' || sort.key === 'clears') {
-          cmp = (+v1 || 0) - (+v2 || 0);
-        } else if (sort.key === 'status') {
-          cmp = statusOrder[v1] - statusOrder[v2];
-        } else if (sort.key === 'dt') {
-          const t1 = v1 === '―'? 0 : new Date(v1).getTime();
-          const t2 = v2 === '―'? 0 : new Date(v2).getTime();
-          cmp = t1 - t2;
-        } else {
-          cmp = v1.localeCompare(v2, 'ja');
-        }
+        let v1 = a[sort.key], v2 = b[sort.key], cmp = 0;
+        if (sort.key === 'hs' || sort.key === 'clears') cmp = (+v1) - (+v2);
+        else if (sort.key === 'status') cmp = statusOrder[v1] - statusOrder[v2];
+        else if (sort.key === 'dt') cmp = (v1 === '―'? 0 : new Date(v1)) - (v2 === '―'? 0 : new Date(v2));
+        else cmp = v1.localeCompare(v2, 'ja');
         return (sort.dir === 'asc' ? 1 : -1) * cmp;
       });
       tbody.innerHTML = '';
