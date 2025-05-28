@@ -1,3 +1,964 @@
+コンテンツへとスキップする
+あなた:
+算数アプリ0522.html
+ファイル
+九の段の九九（ばらばら）.html
+ファイル
+九九.html
+ファイル
+一の段の九九（ばらばら）.html
+ファイル
+小学生が利用するGIGA端末で、算数アプリを開発したい。
+こんな感じで児童が追加していける仕組みまでは作れたけど、児童には追加の仕方が難しい。
+
+サーバーを経由してやってみたいのだけど、どうすればいいと思う？
+ChatGPT:
+GIGA端末を使う小学生向けに、算数アプリのファイル追加を「児童が簡単にできるように」するには、ファイル操作を不要にしてサーバー上に教材を用意し、それを一覧から選ぶだけにする仕組みが理想的です。現状のように、ローカルファイルを手動追加するのは小学生には難しいためです。
+
+👣 解決の方向性：サーバーで教材を管理
+✅ 現在の構成（確認）
+アップロードされた「算数学習アプリ」では、
+
+各教材（九九など）は .html ファイル。
+
+学年（APP_GRADE）・区分（APP_CATEGORY）・記録は localStorage に保存。
+
+目次ページ（算数アプリ0522.html）ではローカルファイル選択で教材を追加
+。
+
+🔁 改善案：児童が「ファイルを追加せず」利用できるようにする
+① 教材ファイルをサーバー（例：GitHub Pages）にアップロード
+以下のような構成にする：
+
+https://your-domain.github.io/
+├── index.html（目次ページ）
+└── drills/
+     ├── 九の段.html
+     ├── 一の段.html
+     └── ...
+② 目次アプリに「あらかじめ教材一覧を定義」
+方法1：教材ファイル名のリストをコードに埋め込む
+const predefinedList = [
+  { name: '九の段の九九（ばらばら）.html', grade: '2年', category: '九九' },
+  { name: '一の段の九九（ばらばら）.html', grade: '2年', category: '九九' },
+  { name: '九九.html', grade: '2年', category: '九九' }
+];
+それぞれに extractMeta を使って情報を追加し、 list に追加表示。
+
+方法2：教材一覧をJSONファイルにしておく
+例：drills/list.json に以下を用意：
+
+[
+  { "name": "九の段の九九（ばらばら）.html", "grade": "2年", "category": "九九" },
+  { "name": "一の段の九九（ばらばら）.html", "grade": "2年", "category": "九九" },
+  { "name": "九九.html", "grade": "2年", "category": "九九" }
+]
+JavaScriptで読み込む：
+
+fetch('drills/list.json')
+  .then(res => res.json())
+  .then(async items => {
+    for (const item of items) {
+      const meta = await fetchMetaFromRemoteFile(item.name);
+      list.push({ ...item, ...meta, selected: false });
+    }
+    save(); updateGradeOptions(); updateCategoryOptions(); applySort(); render();
+  });
+③ 児童は「選ぶだけ」。ファイル選択は不要
+🛠 サーバー公開方法（無料）
+GitHub Pages を使う
+GitHubでリポジトリ作成（例：math-app）
+
+index.html（目次）、drills/*.html（教材）を配置
+
+GitHub Pagesを有効化（Settings > Pages）
+
+公開URL例：https://yourname.github.io/math-app/
+
+児童はこのURLを開いて、教材にアクセスするだけになります。
+
+🔐 GIGA端末での注意点（セキュリティ）
+.html ファイルを含むURLからの読み込みがブロックされないよう、https対応サーバー（GitHub Pagesなど）を使う
+
+必要ならば、教材の中で外部サービスへのアクセス（CDN等）を避け、すべてローカルリソースで構成
+
+localStorage の保存先は端末ごとになるため、児童ごとの記録も問題なく保持されます
+
+✅ 次のステップ
+ご希望があれば、以下をお手伝いします：
+
+GitHub Pages 用のフォルダ構成とファイル群を生成
+
+目次ページのコードを児童用に完全自動化（JSONから教材読込）
+
+教材一覧 list.json を作成
+
+ご希望の形式や内容があれば教えてください。対応したテンプレートをご提供します。
+
+
+情報源
+あなた:
+GitHub Pages を使う方法を教えて
+ChatGPT:
+GitHub Pages を使って、あなたの算数アプリを「児童がURLから開いて使えるようにする」方法を、教員向けにわかりやすくステップごとに解説します。
+
+🧭 GitHub Pages とは？
+GitHubにアップロードしたHTMLファイルを、そのまま「Webページとして公開できる」無料サービスです。
+
+✅ 必要なもの
+無料の GitHub アカウント（なければ作成）
+
+インターネット接続されたパソコン
+
+アプリのファイル一式（index.html、drills/*.html など）
+
+🪜 ステップ 1：GitHub アカウントを作る（初めての場合）
+https://github.com にアクセス
+
+[Sign up] をクリックし、アカウントを作成
+
+🪜 ステップ 2：新しいリポジトリを作る
+ログイン後、右上の「＋」 → 「New repository」をクリック
+
+設定：
+
+Repository name: math-app など（自由）
+
+Public（公開） にする
+
+「Add a README」は ✅チェックしてOK
+
+[Create repository] をクリック
+
+🪜 ステップ 3：ファイルをアップロード
+作成したリポジトリ画面に移動
+
+「Add file」 → 「Upload files」
+
+あなたの算数アプリのファイルをドラッグ＆ドロップ（例：index.html や drills フォルダ）
+
+「Commit changes」でアップロード完了
+
+🪜 ステップ 4：GitHub Pages を有効にする
+リポジトリ画面の「Settings」タブをクリック
+
+左側の「Pages」または「Pages & Deployment」を選択
+
+設定：
+
+Source → Deploy from a branch
+
+Branch → main（または master）/ root を選択
+
+[Save] をクリック
+
+数十秒後、上に 公開URL（例：
+https://yourname.github.io/math-app/）が表示されます。
+
+🪜 ステップ 5：確認する
+このURLを児童に配れば、どの端末からでもアプリにアクセス可能です！
+index.html がトップページとして開かれ、内部リンクで各ドリル（drills/*.html）に移動できます。
+
+🎒 学校での実用アドバイス
+ファイル追加・更新：Web上で Add file > Upload files でOK
+
+ロイロノートやGoogle Classroomで共有：公開URLを貼るだけ
+
+児童が保存する履歴は localStorage に記録され、個別端末ごとに動作します
+
+🚀 次のステップ（ご希望あれば）
+index.html の自動教材読み込み版を用意
+
+教材 list.json を自動生成
+
+一括アップロード用ZIPファイルを作成
+
+これらをご希望でしたら、「準備して」と言ってください。すぐにお渡しできます！
+
+あなた:
+ページが日本語訳されているので、各ステップを日本語にしてもう一度説明して
+ChatGPT:
+もちろんです！以下に、GitHub Pages を使って算数アプリを児童に配布する方法を、日本語でステップごとにわかりやすく説明します。
+
+🎯 目標
+「児童がファイルを選ばなくても、URLから算数アプリにアクセスできる」ようにします。
+
+🧳 準備するもの
+GitHub（ギットハブ）のアカウント
+
+Webブラウザ（Chrome、Edgeなど）
+
+アプリのHTMLファイル（index.html、drills/九九.html など）
+
+🪜 ステップ①：GitHub のアカウントを作る（まだの場合）
+https://github.com にアクセス
+
+右上の「Sign up（サインアップ）」をクリック
+
+ユーザー名・メールアドレス・パスワードを入力して、無料アカウントを作成します
+
+※メール認証が必要な場合があります
+
+🪜 ステップ②：新しい「リポジトリ」を作る
+これは「教材のフォルダ」を作るイメージです。
+
+GitHubにログインしたら、右上の「＋」をクリック
+
+「New repository（新しいリポジトリ）」を選びます
+
+以下のように設定します：
+
+項目	内容の例
+Repository name	math-app（自由でOK）
+Public（公開）	✅ チェックを入れる
+README	✅ チェックを入れる
+「Create repository（作成）」ボタンをクリック
+
+🪜 ステップ③：アプリのファイルをアップロード
+作成したリポジトリのページに移動
+
+「Add file（ファイルを追加）」→「Upload files（ファイルをアップロード）」を選ぶ
+
+index.html と drills フォルダ（中に九九ドリルが入ったもの）をドラッグ＆ドロップ
+
+下にある「Commit changes（変更を確定）」ボタンをクリック
+
+🪜 ステップ④：GitHub Pages を有効にする
+リポジトリの画面で、上部の「Settings（設定）」タブをクリック
+
+左側のメニューで「Pages」または「Pages and Deployment」を探してクリック
+
+「Branch（ブランチ）」という欄で次のように設定：
+
+設定項目	選択内容
+Source（元）	Deploy from a branch（ブランチから配信）
+Branch（ブランチ）	main（または master）
+フォルダ	/（root） を選択する
+「Save（保存）」ボタンを押す
+
+※ 数十秒後、上に「Your site is live at...」という形でURLが表示されます
+　例：https://yourname.github.io/math-app/
+
+🪜 ステップ⑤：アプリを確認・共有する
+公開URL（例：https://yourname.github.io/math-app/）にアクセスすると、index.html が表示されます
+
+index.html にあるリンクをクリックすると、九九ドリルなどが開きます
+
+児童には「URLだけ」を配ればOK！
+
+💡 よくある質問
+質問	回答
+日本語で大丈夫？	HTMLファイルが日本語なら、そのまま表示されます
+児童が変更できる？	いいえ、見るだけです。記録は自分の端末の中に保存されます（localStorage）
+無料ですか？	はい、GitHub Pages は完全無料です
+学校の端末で開ける？	https:// のURLであれば、通常は開けます。セキュリティの設定で制限されている場合は学校の先生が対応する必要があります
+✋ 次にやってほしいことがあれば…
+ZIPでまとめてアップロード用のファイルを用意
+
+index.html を自動で教材一覧にする（児童が選ぶだけの形）
+
+といった作業を代行できます。「それお願い！」と言っていただければすぐに対応します。
+
+あなた:
+いったんリセットして削除するのは
+ChatGPT:
+GitHub Pages の公開を**いったんリセットしたい（削除したい）**場合、以下の２通りの方法があります。目的に応じて選んでください。
+
+🔁 方法①：「GitHub Pages の公開だけを停止」したい場合
+これは公開された Webページ（URL）を非公開にするだけで、ファイル自体は GitHub に残ります。
+
+手順：
+リポジトリのページを開く
+
+上部の「Settings（設定）」タブをクリック
+
+左の「Pages」を選択
+
+「Branch」の設定を「None」に変更
+
+「Save」をクリック
+
+✅ これでWebページは非公開になります（URLも使えなくなる）
+➡ ファイルはそのまま残るので、また再公開もできます。
+
+❌ 方法②：「リポジトリごと完全に削除」したい場合
+これはファイルもGitHubのデータも全部消す方法です。
+
+手順：
+リポジトリのページを開く
+
+「Settings（設定）」タブをクリック
+
+下にスクロールし、「Danger Zone（危険ゾーン）」まで移動
+
+「Delete this repository（このリポジトリを削除）」をクリック
+
+表示される指示にしたがってリポジトリ名を入力し、確認する
+
+⚠ 完全に削除されるので元に戻せません！
+➡ 新しく作り直すことは可能です。
+
+✨ どちらがオススメ？
+目的	方法
+公開だけ止めたい（また使う予定）	✅ 方法①
+完全に削除したい（作り直す）	✅ 方法②
+必要であれば、リセット後に使いやすい**新しい初期ファイル一式（ZIP）**をお渡しすることもできます。「新しく作り直したい」と伝えてください。
+
+あなた:
+※ 数十秒後、上に「Your site is live at...」という形でURLが表示されます
+　例：https://yourname.github.io/math-app/
+ここがわからん
+ChatGPT:
+よくぞ聞いてくれました！
+GitHub Pages を有効にした後、どこにその「公開URL（Webアドレス）」が出てくるのか、画面のどこを見ればいいか迷いますよね。以下で「画像なしでもはっきりわかるように」説明します。
+
+🔍 公開URL（Webページのアドレス）の確認方法
+✅ URLの表示場所は「Settings（設定）」内の Pages セクションにあります。
+🔽 手順（日本語UIの場合でも基本は同じです）
+GitHubで、対象のリポジトリページ（例：math-app）を開く
+
+上部メニューの中から Settings（設定） をクリック
+※右端近くにあります
+
+左のメニューの中から Pages または Pages and deployment を選択
+（ページ公開設定の場所です）
+
+画面の中央あたりに、以下のようなメッセージが表示されます：
+
+Your site is live at:
+https://yourname.github.io/math-app/
+✅ そこがあなたのWebページのURLです！
+yourname はあなたのGitHubのユーザー名
+
+math-app はあなたが付けたリポジトリ名
+
+✋ URLが表示されない場合
+以下をチェックしてみてください：
+
+チェック項目	内容
+Branch の設定	Pages の「Source」で main / /root を選んで保存したか
+アップロード済み	少なくとも index.html がアップロードされているか
+時間経過	設定後すぐには表示されないこともあります（30秒～1分）
+URLの例	表示されなくても https://ユーザー名.github.io/リポジトリ名/ を直接開いてみる価値あり
+🧪 実例シミュレーション
+もしあなたのGitHubユーザー名が takechi-teacher で、リポジトリ名が math-app だった場合：
+
+👉 公開URLは：
+
+https://takechi-teacher.github.io/math-app/
+このURLを、児童のロイロノートやブックマークに貼れば、だれでも簡単に開けます！
+
+必要なら…
+公開設定の「スクリーンショット風ガイド」
+
+実際のURLで確認する方法
+
+もすぐ出せます。「画像で見たい」「URLが開かない」などがあれば、具体的に教えてくださいね。
+
+あなた:
+ファイルがないのだけど
+ChatGPT:
+了解しました！
+「GitHub PagesのURLは出たけど、アクセスしても**“404 Not Found” や “ファイルがない”**と表示される」という状況ですね。
+
+これは、公開はできているけど中身（ファイル）がないか、正しい場所にアップロードされていないことが原因です。以下に対処法をわかりやすく解説します。
+
+🔎 よくある原因と対処法
+❌ 原因①：index.html がアップロードされていない
+🔧 解決方法：
+
+GitHub のリポジトリページに戻る
+
+「Add file」→「Upload files」
+
+あなたのアプリの index.html ファイルをアップロード
+
+必要に応じて drills/ フォルダもアップロード
+
+「Commit changes（変更を確定）」をクリック
+
+→ 数秒後にページを再読み込みすると表示されます。
+
+❌ 原因②：ファイルが main/index.html ではなくサブフォルダなどにある
+GitHub Pages の初期設定では、リポジトリのルート直下（トップ）に index.html が必要です。
+
+🔧 確認方法：
+
+ファイル一覧で index.html がトップに見えていればOK
+
+index.html が docs/ フォルダや drills/ にあると、直接そのURLを開かないといけません
+
+❌ 原因③：まだ反映されていない（タイムラグ）
+GitHub Pages では、初回や変更直後に数十秒～1分ほどの遅れが出ることがあります。
+
+🔧 解決方法：
+
+1～2分待ってから、再読み込み（Ctrl + F5）してみてください
+
+✅ 正常な例（成功しているとき）
+GitHub Pagesで正しく表示される場合：
+
+https://ユーザー名.github.io/リポジトリ名/ にアクセス
+
+index.html が表示される（算数アプリの画面）
+
+🚀 最短の対処提案
+「ファイルがなくて困っている」場合、
+✅ アップロード用の index.html + drills を ZIP にまとめてお渡ししますか？
+
+このZIPをアップするだけで、すぐ動くページが完成します。
+
+👉 必要なら「ZIPください」と言ってください。即対応します。
+
+あなた:
+画像をアップロードしました
+こんな
+ChatGPT:
+画像ありがとうございます！
+表示されているページに「さんすうドリル」というタイトルだけがあり、中身（目次やボタンなど）が表示されていない状態ですね。
+
+これは、次のような原因が考えられます。
+
+🧭 原因と対処法まとめ
+❌【原因①】JavaScript が正しく読み込まれていない
+よくあるケース：
+index.html は表示されるけれど、中で読み込もうとしている .js や drills/*.html が存在しない、またはパスがずれている
+
+✅ 解決方法：
+index.html の中身に fetch() や drills/〇〇.html を読み込むコードがあるか確認
+
+それに対応する drills フォルダごと GitHub にアップロードしてください
+
+❌【原因②】ローカルストレージやファイル選択に依存しているコードが動かない
+たとえば：
+<input type="file">
+のようなコードがあると、サンドボックス（GitHub Pages上）では一部機能が制限される場合があります。
+
+✅ 解決方法：
+ファイル選択型ではなく、あらかじめ教材を定義した形式に変更（自動表示方式に切り替える）
+
+✅ 最も確実な対処方法
+📦 「完成版一式」をZIPで提供しましょうか？
+以下の構成を含む ZIP ファイルを作ってお渡しできます：
+
+math-app/
+├── index.html         ← 自動で教材一覧を表示
+└── drills/
+    ├── 九の段.html
+    ├── 一の段.html
+    ├── ...
+これをそのまま GitHub にアップロードすれば、すぐに動きます。
+
+✋ ご希望であれば：
+「ZIPください」と一言いただければ、
+✅ 完成済みの算数アプリ一式を生成して今すぐお渡しします！
+
+いかがでしょうか？
+
+あなた:
+zipください
+ChatGPT:
+算数アプリ一式をまとめたZIPファイルを作成しました。下記リンクからダウンロードして、GitHub へアップロードしてください。
+
+math-app.zip をダウンロード 
+
+あなた:
+五の段の九九（ばらばら）.html
+ファイル
+三の段の九九（ばらばら）.html
+ファイル
+四の段の九九（ばらばら）.html
+ファイル
+七の段の九九（ばらばら）.html
+ファイル
+二の段の九九（ばらばら）.html
+ファイル
+八の段の九九（ばらばら）.html
+ファイル
+六の段の九九（ばらばら）.html
+ファイル
+これも追加してzipつくって
+ChatGPT:
+
+思考時間: 33 秒
+新しい段のファイルをすべて追加してZIPを更新しました。以下からダウンロードしてご利用ください。
+
+math-app.zip をダウンロード 
+
+あなた:
+これをどうすればいいの？
+ChatGPT:
+
+思考時間: 6 秒
+ダウンロードしたZIP は、以下の手順で GitHub Pages にアップロードしてください。
+
+📂 1. ZIP を解凍する
+ご自分のパソコンで math-app.zip をダウンロード
+
+ZIP を右クリック → 「すべて展開」などでフォルダに解凍
+
+中身を確認すると、以下の構成になっているはずです：
+
+math-app/
+├── index.html
+└── drills/
+    ├── 一の段の九九（ばらばら）.html
+    ├── 二の段の九九（ばらばら）.html
+    ├── …（以下、全段）
+    └── 九九.html
+🔄 2. GitHub リポジトリにアップロードする方法
+方法A) Webブラウザだけで完結
+GitHub で、あなたのリポジトリ（例：math-app）ページを開く
+
+「Add file」→「Upload files」をクリック
+
+解凍したフォルダの中から
+
+index.html ファイル
+
+drills フォルダ（中身ごと）
+を ドラッグ＆ドロップ
+
+下部にアップロードされたファイル一覧が出たら、「Commit changes」をクリック
+
+数十秒待ってから、公開URL（https://ユーザー名.github.io/math-app/）を開き、表示を確認
+
+方法B) Git コマンドで管理したい場合
+# 1. リポジトリを手元にクローン
+git clone https://github.com/<あなたのユーザー名>/math-app.git
+cd math-app
+
+# 2. 解凍してできた math-app フォルダの中身をコピー
+#    （index.html と drills フォルダをこのカレントに上書きコピー）
+#    例えば mac/Linux: 
+cp -R ../math-app/* ./
+
+# 3. 変更をステージしてコミット
+git add .
+git commit -m "算数アプリのファイル群を追加"
+
+# 4. GitHub にプッシュ
+git push origin main
+もしブランチ名が master なら、main の代わりに master を指定してください。
+
+🚀 最後に
+アップロードが完了したら、再度 Settings > Pages で正しいブランチ（main/root）になっているかを確認
+
+数十秒待ってから、公開URL（例：
+https://<あなたのユーザー名>.github.io/math-app/）
+をブラウザで開き、
+
+トップに「さんすうドリル」の一覧が見える
+
+リンクをクリックすると各段のドリルが開く
+
+これで児童はファイル操作不要、URLをクリックするだけで使えるようになります！
+何かつまずいたら教えてくださいね。
+
+あなた:
+もう一度、
+公開URL（https://ユーザー名.github.io/math-app/）を開き、表示を確認
+の方法を教えて
+ChatGPT:
+
+思考時間: 4 秒
+では、公開URL を実際に開いて動作を確認する手順を改めてまとめます。
+
+1. Webブラウザを起動する
+GIGA端末の場合は標準の Chrome（もしくは Edge）を開いてください。
+
+2. アドレスバーにURLを入力
+ブラウザ上部のアドレスバー（検索窓ではなく「https://」で始まる欄）をクリック
+
+次の形式で URL を入力します：
+
+https://<あなたのGitHubユーザー名>.github.io/math-app/
+例）ユーザー名が “takechi-teacher” の場合：
+
+https://takechi-teacher.github.io/math-app/
+3. エンターキーを押してページを読み込む
+入力後、Enter（Return）キーを押します。
+
+4. 表示内容を確認する
+正常なら、ページ上部に 「さんすうドリル」 の見出しが大きく表示され、
+
+その下に「一の段の九九（ばらばら）」「二の段の九九…」「九九 (総合ドリル)」などのリンク一覧が出ます。
+
+各リンクをクリックすると、新しいタブで該当ドリルが開きます。
+
+5. うまく表示されないときのチェック
+状況	対処方法
+ページが真っ白	→ アドレスバーで再読み込み（Ctrl + F5）
+404 エラー表示	→ URLの <ユーザー名> や math-app の綴りを確認
+「さんすうドリル」が出ない	→ GitHub リポジトリに index.html が正しくアップロードされているか確認
+ログイン画面が出る	→ プライベートリポジトリになっていないかチェック（Public にする）
+これで、公開URLを開いて正しくページが表示されるか自分で確かめられます。
+うまくいかない箇所があれば、どのステップで何が起きたか教えてくださいね。
+
+あなた:
+算数アプリ0522.html
+ファイル
+インデックスの改良。UIはこんな感じで。ファイルの追加機能は消して、初めからアップロードされているものが表示されるように。
+ChatGPT:
+
+思考時間: 21 秒
+インデックスを改良し、ファイル追加機能を削除して、あらかじめアップロードされたドリルを表示するようにしました。以下のポイントを反映しています。
+
+「ファイルの追加／削除」ボタンを削除
+
+ページ読み込み時に定義済みリスト（predefined）から教材を表示
+
+学年・区分での絞り込み、列クリックでのソート機能を維持
+
+各ドリルは新しいタブで開くリンク形式
+
+この index.html を GitHub Pages のルートに配置し、先ほど作成した drills/ フォルダと一緒にアップすれば、児童はURLを開くだけで目次から各ドリルにアクセスできます。
+何か追加調整があればお知らせください！
+
+あなた:
+ChatGPT への質問
+
+学年、区分は消して。代わりにステータスを表示
+ChatGPT:
+
+思考時間: 20 秒
+学年・区分を削除し、「ステータス」列を追加しました。
+これで、以下のように表示されます。
+
+ステータス（ローカルストレージの <ファイル名>_status）
+
+ドリル名
+
+最終チャレンジ日時
+
+ハイスコア
+
+クリア回数
+
+必要に応じて、ステータスの色付けやフォーマット調整も可能です。
+他にご要望があればお知らせください！
+
+あなた:
+これをgithubにいれたらいいの？
+ChatGPT:
+はい。次の手順で、この改良版の index.html と drills/ フォルダを GitHub に入れてください。
+
+1. リポジトリを用意する
+既に作成済みのリポジトリ（例：math-app）を使うか、新たに Public リポジトリを作成します。
+
+2. ルート直下にファイルを配置する
+ローカルで作業用フォルダ（例：math-app/）を開く
+
+ルート直下に、
+
+改良版の index.html
+
+drills/ フォルダ（中に各段のHTMLファイル）
+があることを確認
+
+math-app/
+├── index.html       ← ここに先ほどの改良版を置く
+└── drills/
+    ├── 一の段の九九（ばらばら）.html
+    ├── 二の段の九九（ばらばら）.html
+    └── …（その他）
+3. ファイルをコミット＆プッシュ
+方法A：Webブラウザだけで
+GitHub のリポジトリページを開く
+
+「Add file」→「Upload files」
+
+index.html と drills/ フォルダをドラッグ＆ドロップ
+
+「Commit changes」をクリック
+
+方法B：Git コマンドで
+# （まだクローンしていない場合）
+git clone https://github.com/あなたのユーザー名/math-app.git
+cd math-app
+
+# 先ほど配置したローカルのファイル群をコピー／上書き
+# 例えば mac/linux:
+cp -R /path/to/改良版/math-app/* ./
+
+git add index.html drills/
+git commit -m "改良版のインデックスとdrillsフォルダを追加"
+git push origin main
+※ブランチ名が master なら main の代わりに master を使ってください。
+
+4. GitHub Pages の公開を確認
+リポジトリの「Settings」>「Pages」でSourceが main / / (root) に設定されているか確認
+
+数十秒待って、
+
+https://<あなたのユーザー名>.github.io/math-app/
+にアクセス
+
+「算数学習アプリ」の目次が新しいUIで表示されれば完了です！
+
+以上で、児童はファイル操作なく、この改良版目次から各ドリルにアクセスできるようになります。何かうまくいかない点があれば教えてください。
+
+あなた:
+https://dtake-dtake.github.io/sansu-drille/
+こんな感じのぺーじをつくってみた
+ChatGPT:
+
+思考時間: 32 秒
+実際に表示を確認すると、目次のヘッダーだけが出てドリル項目が一件も表示されていないようです。これはまだ 更新した index.html と drills/ フォルダ以下のファイル が GitHub にアップロードされていないか、あるいはパスがずれているためです。
+
+🔧 対策ステップ
+リポジトリに index.html を更新する
+
+GitHub リポジトリのルート直下にある index.html を開く（Web UI ならファイル名をクリック）
+
+右上の鉛筆アイコン（Edit this file）を押して、先ほどお渡しした改良版の HTML コードに丸ごと置き換える
+
+ページ下の「Commit changes」で保存
+
+drills/ フォルダと中のファイルをアップロードする
+
+リポジトリ画面で「Add file → Upload files」を選択
+
+ローカルの drills フォルダをそのままドラッグ＆ドロップ
+
+「Commit changes」で保存
+
+GitHub Pages の公開設定を確認
+
+「Settings → Pages」で、
+
+Branch が main（または master）
+
+Folder が / (root)
+に設定されていることを確認
+
+公開URL にアクセス
+
+https://<あなたのユーザー名>.github.io/sansu-drille/
+をブラウザで開き、
+
+「算数学習アプリ」の見出し
+
+下にステータス・名前・最終チャレンジ・ハイスコア・クリア回数のテーブル
+
+各行がドリルリンクとして並んでいる
+
+…と正しく表示されれば完了です。
+
+ポイント
+
+リポジトリ名が sansu-drille なので、URL は
+https://dtake-dtake.github.io/sansu-drille/
+
+コード中の drills/～.html への相対パスは、必ずリポジトリ直下の drills フォルダにあわせる
+
+ファイル名の大文字小文字・全角／半角スペースも厳密に一致させてください
+
+これで「ファイルを選ぶ必要なく、はじめからアップロード済みのドリル一覧」が表示されるはずです。
+何かつまづく点があれば、どのステップで何が起こったか教えてください！
+
+あなた:
+いや、できているのよ。で、このurlでやります。 UIの変更を。 まあ、細かいこと一気に行っても難しそうだから少しずつ。 indexの名前に続いて、ステータス、最終チャレンジ、ハイスコアが表示されるようにして。表になるといい。
+ChatGPT:
+「名前」の次に「ステータス」「最終チャレンジ」「ハイスコア」を並べたテーブル形式に変更しました。これで目的の表示順序になります。
+
+名前列：ドリル名をクリックで開く
+
+ステータス列：localStorageから取得
+
+最終チャレンジ列：localStorageから取得
+
+ハイスコア列：localStorageから取得
+
+動作確認してみてください。次のステップや色分けなど、ご要望があればお知らせください！
+
+あなた:
+ステータスとか最終チャレンジ、ハイスコアを世取っていない問題を解決して
+ChatGPT:
+
+思考時間: 1m 18s
+各ドリルの APP_NS を使って、正しい localStorage の history と highScore からステータス・最終チャレンジ・ハイスコアを取得するように修正しました。
+動作確認した上で、問題が残る場合はお知らせください。続きをサポートします！
+
+あなた:
+名前の左に学年、カテゴリ列を作る。ハイスコアの右にクリア数列をつくる。
+ChatGPT:
+
+思考時間: 15 秒
+学年とカテゴリを名前の左に、クリア回数をハイスコアの右に追加しました。
+これでテーブルは以下の順番になります：
+
+学年 | カテゴリ | 名前 | ステータス | 最終チャレンジ | ハイスコア | クリア回数
+
+ソートもすべての列で可能です。動作をご確認ください！
+
+あなた:
+記録とかってローカルストレージに保存しているらしいけど、サーバーのUI変更したらリセットされることはないよね？
+キャッシュをクリアしたら消えるの？
+ChatGPT:
+
+思考時間: 9 秒
+サーバー側で UI（index.html やスクリプト）を更新しただけでは、既存の localStorage のデータは消えません。localStorage はあくまでブラウザの「サイトごとの保存領域」に残っていて、サーバーから配信される HTML/CSS/JS を上書きしてもクリアされない仕組みです。
+
+✔ UI 更新では消えない理由
+localStorage はブラウザ側に保存されている
+
+UI（HTMLや JS）のファイル名や中身を変えても、キー（ストレージ名）がそのままなら同じ場所に読み書きされる
+
+つまり、status や history といった保存データは引き続き利用可能
+
+✖ どんなときに消える？
+**ブラウザの「サイトデータを消去」**を明示的に行ったとき
+
+Chrome なら「設定 > プライバシーとセキュリティ > サイトの設定 > 閲覧データの消去」で
+「Cookie と他のサイトデータ」を選択して消すと、localStorage もまとめて消えます。
+
+開発ツールの「Application（アプリケーション）」タブから Storage をクリアしたとき
+
+プログラムで localStorage.clear() や特定キーの removeItem() を呼んだとき
+
+シークレット（プライベート）モードで使っている場合は、ウィンドウを閉じるとセッション中のストレージは消えます。
+
+🔄 普段のキャッシュクリア（Ctrl＋F5）では…
+HTTP キャッシュ（CSS/JS の再取得）は行われますが、localStorage は消えません。
+
+なので、更新したコードを確実に読み直したいときは「Ctrl＋F5」や「キャッシュの強制クリア」で OK です。
+
+──まとめ──
+サーバー上の UI をアップデートしても、localStorage の記録はそのまま保持されます。
+
+ユーザーが「サイトデータを消去」操作をしない限り、データは残り続けます。
+
+安心して UI の改良を進めて大丈夫ですよ！
+
+あなた:
+・リンクがわかるように青文字と下線にする機能が消えたので復活させる。
+・ソート機能は、一度目のクリックで値の大きいものが上に来るように。
+→ステータスについては。S＞A＞B＞C＞D。
+ChatGPT:
+
+思考時間: 18 秒
+リンクを青文字＋下線に戻しました。
+
+ソートは初回クリックで降順（大きい/新しい/高いステータスが上）になるように変更。
+
+ステータスは S > A > B > C > D 順で並びます。
+
+テーブルヘッダをクリックして動作をご確認ください。問題なければ、次はデザイン微調整や追加機能などをご指示ください！
+
+あなた:
+ChatGPT への質問
+
+ステータス欄の英字に色を付けて。Sは金色、Aは赤、Bは緑、Cは青、Dは黒。それぞれ太字で。
+ChatGPT:
+ステータスの英字を、それぞれ指定の色・太字で表示するように変更しました：
+
+S：金色
+
+A：赤色
+
+B：緑色
+
+C：青色
+
+D：黒色
+
+.status-{letter} のクラスで管理しているので、必要に応じて色や太さをさらに調整できます。ご確認ください！
+
+あなた:
+質問
+ドリル項目すべてHTMLに入ってるけど、これ全部書かないとダメ？
+ファイル名を読み取って表示することはできない？
+ChatGPT:
+
+思考時間: 9 秒
+クライアント側（ブラウザの JavaScript）だけでは、サーバー上のディレクトリを直接「読み取り」してファイル一覧を自動取得することはできません。
+ですが、以下のような仕組みを入れれば、HTML に手打ちする手間をなくすことができます。
+
+方法①：list.json を用意して fetch する
+リポジトリの drills/ フォルダ直下に、list.json を置く
+例）drills/list.json
+
+[
+  "一の段の九九（ばらばら）.html",
+  "二の段の九九（ばらばら）.html",
+  "三の段の九九（ばらばら）.html",
+  …,
+  "九九.html"
+]
+index.html を以下のように書き換え
+
+<script>
+  // ① JSON を取得
+  fetch('drills/list.json')
+    .then(r => r.json())
+    .then(files => {
+      // ② 各ファイル名からドリル名と APP_NS（localStorageキー）を組み立て
+      const drills = files.map(name => {
+        // 例: "三の段の九九（ばらばら）.html" → ns: "multiplication3dan_v1_"
+        const base = name.replace(/\.html$/, '');
+        const ns   = /* 名前空間を自動生成するロジックか、JSONに含めてもOK */;
+        return { file: `drills/${name}`, name: base, ns };
+      });
+      // ③ 以降は既存の list 作成・render 関数を呼び出し
+      window.drills = drills;
+      initAndRender();  // 既存の init/render を使う
+    });
+</script>
+このやり方なら、新しく段を追加したときは drills/ に HTML をアップ＆list.json にファイル名を追記するだけ。手動で index.html を編集する必要がなくなります。
+
+方法②：Jekyll（GitHub Pages 標準）を使って Liquid で自動生成
+GitHub Pages は Jekyll＋Liquid テンプレートに対応しているので、index.html を以下のように書き換えると、ビルド時に drills/ 配下の .html を自動収集できます。
+
+---
+layout: none
+---
+<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="UTF-8"><title>算数学習アプリ</title></head>
+<body>
+  <h1>さんすうドリル</h1>
+  <ul>
+    {% for f in site.static_files %}
+      {% if f.path contains 'drills/' and f.extname == '.html' %}
+        <li>
+          <a href="{{ f.path | remove_first:'/' }}">
+            {{ f.name | remove: '.html' }}
+          </a>
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</body>
+</html>
+メリット：HTMLを一切手打ちせず、新規追加はファイルを drills/ に置くだけ
+
+注意点：Liquid のビルド時間が増えることと、細かい並び替えや metadata（学年・カテゴリ・namespace）が必要な場合は若干の調整が必要
+
+まとめ
+直接ディレクトリを「クライアント JS だけ」で読むことは不可
+
+list.json や Jekyll の Liquid を使えば、ファイル名の手打ちを解消できます
+
+どちらもやってみて使いやすい方を選んでみてください
+
+ご不明な点や、list.json のテンプレート生成スクリプトが欲しい場合はお知らせください！
+
+あなた:
+方法②：Jekyll（GitHub Pages 標準）を使って Liquid で自動生成
+の方法を教えて
+ChatGPT:
+
+思考時間: 20 秒
+Jekyll＋Liquid でドリル一覧を自動生成する手順は以下のとおりです。これを使えば、drills/ フォルダにHTMLを置くだけで、index.html を編集せずにリンク一覧が更新されます。
+
+1. リポジトリにJekyllを有効化する
+GitHub Pages の設定で特別なことは不要です。
+ルートにある index.html に YAML Front Matter を追加するだけで、Jekyll がビルド時にLiquidテンプレートを解釈してくれます。
+
+2. index.html を Liquid テンプレートに書き換える
+プロジェクト直下の index.html を、以下のように置き換えてください。
+
 ---
 layout: none
 ---
@@ -7,12 +968,303 @@ layout: none
   <meta charset="UTF-8">
   <title>算数学習アプリ</title>
   <style>
+    /* （従来のスタイルをここに） */
+  </style>
+</head>
+<body>
+  <h1>算数学習アプリ</h1>
+  <p>以下のドリルを選んでください。</p>
+
+  <table id="tocTable">
+    <thead>
+      <tr>
+        <th>学年</th><th>カテゴリ</th><th>名前</th>
+        <th>ステータス</th><th>最終チャレンジ</th>
+        <th>ハイスコア</th><th>クリア回数</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    // 1) Liquidでdrills配列を生成
+    const drills = [
+    {% for f in site.static_files %}
+      {% if f.path contains 'drills/' and f.extname == '.html' %}
+      {
+        file: "{{ f.path }}",
+        name: "{{ f.path | remove: 'drills/' | remove: '.html' }}",
+        // もし各HTMLに front matter で grade/category/ns があれば：
+        // grade: "{{ f.data.grade }}",
+        // category: "{{ f.data.category }}",
+        // ns: "{{ f.data.ns }}",
+      }{% unless forloop.last %},{% endunless %}
+      {% endif %}
+    {% endfor %}
+    ];
+
+    // 2) 以降は既存のスクリプトをそのまま使ってlocalStorageから
+    //    status／history／highScoreを読み込み、テーブルに描画します。
+    //    （先ほどのrender関数やsort機能もそのまま機能します）
+
+    // 例）共通化した init 関数を呼び出す
+    window.onload = () => initAndRender(drills);
+  </script>
+</body>
+</html>
+3. 必要な準備
+各ドリルHTML（drills/一の段…html など）に、もし grade/category/ns をLiquid経由で取り込みたい場合は、ファイル先頭に YAML Front Matter を入れておきます：
+
+---
+grade: '2年'
+category: '九九'
+ns: 'multiplication1dan_v1_'
+---
+<!DOCTYPE html>
+<html>…</html>
+既存のクライアントJS（localStorage読み込み・ソート・レンダリング）は、initAndRender(drills) の中にまとめておき、引数にdrills配列を渡す形に書き換えます。
+
+4. 動作確認と運用
+これらをコミット＆プッシュ
+
+GitHub Pages がビルドして数十秒後に反映
+
+index.html の <script> 部分の drills 定義が自動更新されるので、
+
+新しい段を drills/ に置くだけ
+
+必要ならFront Matterにgrade/category/nsを追記
+
+…で目次一覧が自動的に増えます。
+
+この方法なら、手動で index.html にリンクやメタ情報を書く必要がなく、ファイルを置くだけでUIが更新されるようになります。
+もし initAndRender の実装例が必要であればお知らせください。
+
+あなた:
+1. リポジトリにJekyllを有効化したコードを正確に書いて。
+ChatGPT:
+
+思考時間: 4 秒
+以下のように、リポジトリのルートに配置する index.html の先頭に【YAML Front Matter】を置くだけで、GitHub Pages 上で Jekyll が動作するようになります。
+
+---
+# これが YAML Front Matter
+layout: none
+---
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>算数学習アプリ</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; background: #e0f7fa; }
+    /* 以下、必要なスタイルを記載 */
+  </style>
+</head>
+<body>
+  <h1>算数学習アプリ</h1>
+  <p>以下のドリルを選んでください。</p>
+
+  <!-- テーブルやスクリプトなど、これまでのコンテンツ -->
+  <table id="tocTable">…</table>
+  <script>
+    // Liquid で自動生成された drills 配列を使ってレンダリング
+    const drills = [
+      {% for f in site.static_files %}
+        {% if f.path contains 'drills/' and f.extname == '.html' %}
+      {
+        file: "{{ f.path | remove_first: '/' }}",
+        name: "{{ f.name | remove: '.html' }}",
+        {% comment %} 必要なら grade/category/ns をここで追加できます {% endcomment %}
+      }{% unless forloop.last %},{% endunless %}
+        {% endif %}
+      {% endfor %}
+    ];
+    // -- 以降、既存の initAndRender(drills) を呼び出してください --
+    window.onload = () => initAndRender(drills);
+  </script>
+</body>
+</html>
+ポイント
+先頭３行（--- で囲まれた部分）が YAML Front Matter です。
+
+layout: none と書くことで、Jekyll によるレイアウト適用を無効化（そのまま出力）します。
+
+for～endfor といった Liquid タグを使えば、ビルド時に drills/ 配下の HTML ファイル一覧が自動で埋め込まれます。
+
+もし独自設定が必要なら、ルートに _config.yml（空でもOK）を置くと微調整できますが、必須ではありません。
+
+このままコミット＆プッシュすれば、GitHub Pages が Jekyll を通してビルドし、drills/ の内容を自動反映する index.html が生成されます。
+
+あなた:
+2. index.html を Liquid テンプレートに書き換える
+正確にすべてコードを書いて
+ChatGPT:
+
+思考時間: 7 秒
+
+代わりにチャットで回答
+index.html を Liquid テンプレート化し、drills/ 内のファイルを自動で検出して配列化するコードに書き換えました。これで、手動でファイル名を書く必要はありません。
+
+YAML Front Matter で Jekyll を有効化
+
+Liquid ループで site.static_files から drills/*.html を抽出
+
+各ファイルの grade, category, ns は Front Matter による取得（f.data.xxx）
+
+以降の JavaScript 部分は既存のレンダリング・ソート処理を流用
+
+コミット＆プッシュ後に、drills/ フォルダに新しいファイルを追加するだけで自動更新されます。ご確認ください！
+
+
+
+選択されていません選択されていません
+ChatGPT の回答は必ずしも正しいとは限りません。重要な情報は確認するようにしてください。
+
+
+Index
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>算数学習アプリ 目次</title>
+  <style>
     body { font-family: sans-serif; margin: 20px; background: #e0f7fa; }
     h1, p { text-align: center; margin-bottom: 12px; }
     table { width: 100%; background: #fff; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; white-space: nowrap; }
     th { background: #f5f5f5; cursor: pointer; user-select: none; }
     a { color: #0066cc; text-decoration: underline; }
+    /* ステータス色設定 */
     .status-S { color: gold; font-weight: bold; }
     .status-A { color: red; font-weight: bold; }
     .status-B { color: green; font-weight: bold; }
@@ -41,34 +1293,32 @@ layout: none
   </table>
 
   <script>
-    // Liquid で drills 配列を自動生成
     const drills = [
-    {% for f in site.static_files %}
-      {% if f.path contains 'drills/' and f.extname == '.html' %}
-    {
-      file: "{{ f.path | remove_first: '/' }}",
-      name: "{{ f.name | remove: '.html' }}",
-      grade: "{{ f.data.grade | default: '―' }}",
-      category: "{{ f.data.category | default: '―' }}",
-      ns: "{{ f.data.ns | default: '' }}"
-    }{% unless forloop.last %},{% endunless %}
-      {% endif %}
-    {% endfor %}
+      { file: 'drills/一の段の九九（ばらばら）.html', name: '一の段の九九（ばらばら）', ns: 'multiplication1dan_v1_', grade:'2年', category:'九九' },
+      { file: 'drills/二の段の九九（ばらばら）.html', name: '二の段の九九（ばらばら）', ns: 'multiplication2dan_v1_', grade:'2年', category:'九九' },
+      { file: 'drills/三の段の九九（ばらばら）.html', name: '三の段の九九（ばらばら）', ns: 'multiplication3dan_v1_', grade:'2年', category:'九九' },
+      { file: 'drills/四の段の九九（ばらばら）.html', name: '四の段の九九（ばらばら）', ns: 'multiplication4dan_v1_', grade:'2年', category:'九九' },
+      { file: 'drills/五の段の九九（ばらばら）.html', name: '五の段の九九（ばらばら）', ns: 'multiplication5dan_v1_', grade:'2年', category:'九九' },
+      { file: 'drills/六の段の九九（ばらばら）.html', name: '六の段の九九（ばらばら）', ns: 'multiplication6dan_v1_', grade:'2年', category:'九九' },
+      { file: 'drills/七の段の九九（ばらばら）.html', name: '七の段の九九（ばらばら）', ns: 'multiplication7dan_v1_', grade:'2年', category:'九九' },
+      { file: 'drills/八の段の九九（ばらばら）.html', name: '八の段の九九（ばらばら）', ns: 'multiplication8dan_v1_', grade:'2年', category:'九九' },
+      { file: 'drills/九の段の九九（ばらばら）.html', name: '九の段の九九（ばらばら）', ns: 'multiplication9dan_v1_', grade:'2年', category:'九九' },
+      { file: 'drills/九九.html', name: '九九 (総合ドリル)', ns: 'multiplication_1to9_v6_', grade:'2年', category:'九九' }
     ];
 
-    // ローカルストレージからステータス・日時・スコアを読み込み
     const statusOrder = { 'S':5, 'A':4, 'B':3, 'C':2, 'D':1, '―':0 };
     const list = drills.map(d => {
       const hs = localStorage.getItem(d.ns + 'highScore') || '―';
       const clears = localStorage.getItem(d.ns + 'clearCount') || '0';
+      const historyJSON = localStorage.getItem(d.ns + 'history') || '[]';
       let status = '―', dt = '―';
       try {
-        const arr = JSON.parse(localStorage.getItem(d.ns + 'history') || '[]');
-        if (arr.length) {
+        const arr = JSON.parse(historyJSON);
+        if (arr.length > 0) {
           status = arr[0].status || status;
           dt = arr[0].datetime || dt;
         }
-      } catch {};
+      } catch (e) {}
       return { grade: d.grade, category: d.category, name: d.name, file: d.file, status, dt, hs, clears };
     });
 
@@ -76,24 +1326,40 @@ layout: none
     const tbody = document.querySelector('#tocTable tbody');
 
     window.onload = () => {
-      document.querySelectorAll('th[data-key]').forEach(th => {
-        th.addEventListener('click', () => {
-          const key = th.getAttribute('data-key');
-          sort.dir = (sort.key === key && sort.dir) ? (sort.dir === 'asc' ? 'desc' : 'asc') : 'desc';
-          sort.key = key;
-          render();
-        });
-      });
+      attachSortHandlers();
       render();
     };
 
+    function attachSortHandlers() {
+      document.querySelectorAll('th[data-key]').forEach(th => {
+        th.addEventListener('click', () => {
+          const key = th.getAttribute('data-key');
+          if (sort.key === key && sort.dir) {
+            sort.dir = sort.dir === 'asc' ? 'desc' : 'asc';
+          } else {
+            sort.key = key;
+            sort.dir = 'desc';
+          }
+          render();
+        });
+      });
+    }
+
     function render() {
       const data = [...list].sort((a, b) => {
-        let v1 = a[sort.key], v2 = b[sort.key], cmp = 0;
-        if (sort.key === 'hs' || sort.key === 'clears') cmp = (+v1) - (+v2);
-        else if (sort.key === 'status') cmp = statusOrder[v1] - statusOrder[v2];
-        else if (sort.key === 'dt') cmp = (v1 === '―'? 0 : new Date(v1)) - (v2 === '―'? 0 : new Date(v2));
-        else cmp = v1.localeCompare(v2, 'ja');
+        const v1 = a[sort.key], v2 = b[sort.key];
+        let cmp = 0;
+        if (sort.key === 'hs' || sort.key === 'clears') {
+          cmp = (+v1 || 0) - (+v2 || 0);
+        } else if (sort.key === 'status') {
+          cmp = statusOrder[v1] - statusOrder[v2];
+        } else if (sort.key === 'dt') {
+          const t1 = v1 === '―'? 0 : new Date(v1).getTime();
+          const t2 = v2 === '―'? 0 : new Date(v2).getTime();
+          cmp = t1 - t2;
+        } else {
+          cmp = v1.localeCompare(v2, 'ja');
+        }
         return (sort.dir === 'asc' ? 1 : -1) * cmp;
       });
       tbody.innerHTML = '';
@@ -114,3 +1380,11 @@ layout: none
   </script>
 </body>
 </html>
+
+
+前のバージョンを表示中です
+このバージョンを復元して編集します
+
+このバージョンに戻す
+
+最新バージョンに戻る
