@@ -1,33 +1,32 @@
-<!-- 一の段の九九（ばらばら）HTML: 学年・区分を追加 (元ファイル: fileciteturn1file0) -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
 <title>一の段の九九</title>
 <style>
- body{font-family:sans-serif;background:#b3ecff;margin:20px;color:#333;font-size:2rem;line-height:1.5;}
- h1,h2{text-align:center;margin:10px 0}
- h2{font-size:1.8rem;margin-bottom:30px}
- #problems-wrapper{max-width:600px;margin:0 auto 20px;padding:20px;border:2px solid #ccc;background:#fff;box-shadow:3px 3px 6px rgba(0,0,0,.1);}
- .problem{display:flex;align-items:center;margin-bottom:20px}
- .problem-number{width:60px;text-align:right;margin-right:20px;font-weight:bold;font-size:2rem}
- .problem-equation{flex:1;display:flex;align-items:center;font-size:2rem}
- .problem-equation span{margin:0 10px}
- input[type=number]{-moz-appearance:textfield;width:60px;font-size:2rem;margin-left:10px;padding:5px;}
- input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
- button{font-size:2rem;margin:0 10px;padding:10px 20px;background:#f2f2f2;border:1px solid #ccc;cursor:pointer}
- button:hover{background:#e0e0e0}
- button:disabled{background:#ddd;cursor:default}
- .button-area{text-align:center;margin-bottom:20px}
- #result-area{text-align:center;margin-bottom:20px}
- #result{font-size:2rem;font-weight:bold;margin:10px 0}
- #highScoreArea,#clearCountArea{font-size:1.8rem;margin:10px 0}
- #highScoreValue,#clearCountValue{font-weight:bold;margin:0 10px}
- #history-area{font-size:1.6rem;margin:10px 0}
- #history-list{list-style:none;padding:0;margin:0}
- #history-list li{margin:4px 0}
- .result-icon{margin-left:10px;font-size:2rem;font-weight:bold;white-space:nowrap}
- .correct{color:red}.wrong{color:blue}
+  body{font-family:sans-serif;background:#b3ecff;margin:20px;color:#333;font-size:2rem;line-height:1.5;}
+  h1,h2{text-align:center;margin:10px 0}
+  h2{font-size:1.8rem;margin-bottom:30px}
+  #problems-wrapper{max-width:600px;margin:0 auto 20px;padding:20px;border:2px solid #ccc;background:#fff;box-shadow:3px 3px 6px rgba(0,0,0,.1);}
+  .problem{display:flex;align-items:center;margin-bottom:20px}
+  .problem-number{width:60px;text-align:right;margin-right:20px;font-weight:bold;font-size:2rem}
+  .problem-equation{flex:1;display:flex;align-items:center;font-size:2rem}
+  .problem-equation span{margin:0 10px}
+  input[type=number]{-moz-appearance:textfield;width:60px;font-size:2rem;margin-left:10px;padding:5px;}
+  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  button{font-size:2rem;margin:0 10px;padding:10px 20px;background:#f2f2f2;border:1px solid #ccc;cursor:pointer}
+  button:hover{background:#e0e0e0}
+  button:disabled{background:#ddd;cursor:default}
+  .button-area{text-align:center;margin-bottom:20px}
+  #result-area{text-align:center;margin-bottom:20px}
+  #result{font-size:2rem;font-weight:bold;margin:10px 0}
+  #highScoreArea,#clearCountArea{font-size:1.8rem;margin:10px 0}
+  #highScoreValue,#clearCountValue{font-weight:bold;margin:0 10px}
+  #history-area{font-size:1.6rem;margin:10px 0}
+  #history-list{list-style:none;padding:0;margin:0}
+  #history-list li{margin:4px 0}
+  .result-icon{margin-left:10px;font-size:2rem;font-weight:bold;white-space:nowrap}
+  .correct{color:red}.wrong{color:blue}
 </style>
 </head>
 <body>
@@ -65,7 +64,8 @@
   const $=s=>document.querySelector(s);
   const $$=s=>[...document.querySelectorAll(s)];
   const now=()=>new Date().toLocaleString();
-  const statusOf=s=>s>=120?"S":s>=100?"A":s>=80?"B":s>=50?"C":"D";
+  // 150以上はSS、120以上はS、それ以下は旧分類
+  const statusOf=s=>s>=150?"SS":s>=120?"S":s>=100?"A":s>=80?"B":s>=50?"C":"D";
   const scrollCenter=e=>e.scrollIntoView({behavior:"smooth",block:"center"});
   const ls=localStorage;
 
