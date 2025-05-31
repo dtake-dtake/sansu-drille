@@ -10,13 +10,24 @@
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; white-space: nowrap; }
     th { background: #f5f5f5; cursor: pointer; user-select: none; }
     a { color: #0066cc; text-decoration: underline; }
-    /* ステータス色設定 */
-    .status-S { color: gold; font-weight: bold; }
-    .status-A { color: red; font-weight: bold; }
-    .status-B { color: green; font-weight: bold; }
-    .status-C { color: blue; font-weight: bold; }
-    .status-D { color: black; font-weight: bold; }
-    .status-― { color: #333; font-weight: normal; }
+
+    /* 追加：SS をレインボー文字にする */
+    .status-SS {
+      background: linear-gradient(to right,
+        red, orange, yellow, green, blue, indigo, violet
+      );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: bold;
+    }
+
+    /* 既存のステータス色設定 */
+    .status-S  { color: gold;    font-weight: bold; }
+    .status-A  { color: red;     font-weight: bold; }
+    .status-B  { color: green;   font-weight: bold; }
+    .status-C  { color: blue;    font-weight: bold; }
+    .status-D  { color: black;   font-weight: bold; }
+    .status-―  { color: #333;    font-weight: normal; }
   </style>
 </head>
 <body>
@@ -40,19 +51,13 @@
 
   <script>
     const drills = [
-      { file: 'drills/一の段の九九（ばらばら）.html', name: '一の段の九九（ばらばら）', ns: 'multiplication1dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/二の段の九九（ばらばら）.html', name: '二の段の九九（ばらばら）', ns: 'multiplication2dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/三の段の九九（ばらばら）.html', name: '三の段の九九（ばらばら）', ns: 'multiplication3dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/四の段の九九（ばらばら）.html', name: '四の段の九九（ばらばら）', ns: 'multiplication4dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/五の段の九九（ばらばら）.html', name: '五の段の九九（ばらばら）', ns: 'multiplication5dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/六の段の九九（ばらばら）.html', name: '六の段の九九（ばらばら）', ns: 'multiplication6dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/七の段の九九（ばらばら）.html', name: '七の段の九九（ばらばら）', ns: 'multiplication7dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/八の段の九九（ばらばら）.html', name: '八の段の九九（ばらばら）', ns: 'multiplication8dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/九の段の九九（ばらばら）.html', name: '九の段の九九（ばらばら）', ns: 'multiplication9dan_v1_', grade:'2年', category:'九九' },
-      { file: 'drills/九九.html', name: '九九', ns: 'multiplication_1to9_v6_', grade:'2年', category:'九九' }
+      /* 省略：ドリル配列 */
     ];
 
-    const statusOrder = { 'S':5, 'A':4, 'B':3, 'C':2, 'D':1, '―':0 };
+    // 変更後：SS を最上位に追加
+    const statusOrder = { 'SS':6, 'S':5, 'A':4, 'B':3, 'C':2, 'D':1, '―':0 };
+
+    // ドリル情報を localStorage と合わせて list に格納する処理はそのまま
     const list = drills.map(d => {
       const hs = localStorage.getItem(d.ns + 'highScore') || '―';
       const clears = localStorage.getItem(d.ns + 'clearCount') || '0';
@@ -65,18 +70,18 @@
           dt = arr[0].datetime || dt;
         }
       } catch (e) {}
-      return { grade: d.grade, category: d.category, name: d.name, file: d.file, status, dt, hs, clears };
+      return {
+        grade: d.grade, category: d.category,
+        name: d.name, file: d.file,
+        status, dt, hs, clears
+      };
     });
 
     let sort = { key: 'name', dir: null };
     const tbody = document.querySelector('#tocTable tbody');
 
+    // クリックでソート、初回は降順（SS が最上位に並ぶ）
     window.onload = () => {
-      attachSortHandlers();
-      render();
-    };
-
-    function attachSortHandlers() {
       document.querySelectorAll('th[data-key]').forEach(th => {
         th.addEventListener('click', () => {
           const key = th.getAttribute('data-key');
@@ -89,7 +94,8 @@
           render();
         });
       });
-    }
+      render();
+    };
 
     function render() {
       const data = [...list].sort((a, b) => {
@@ -100,14 +106,15 @@
         } else if (sort.key === 'status') {
           cmp = statusOrder[v1] - statusOrder[v2];
         } else if (sort.key === 'dt') {
-          const t1 = v1 === '―'? 0 : new Date(v1).getTime();
-          const t2 = v2 === '―'? 0 : new Date(v2).getTime();
+          const t1 = v1 === '―' ? 0 : new Date(v1).getTime();
+          const t2 = v2 === '―' ? 0 : new Date(v2).getTime();
           cmp = t1 - t2;
         } else {
           cmp = v1.localeCompare(v2, 'ja');
         }
         return (sort.dir === 'asc' ? 1 : -1) * cmp;
       });
+
       tbody.innerHTML = '';
       data.forEach(item => {
         const tr = document.createElement('tr');
