@@ -12,24 +12,30 @@
     a { color: #0066cc; text-decoration: underline; }
     /* ステータス色設定 */
 /* 追加部分：SS をレインボー（グラデーション）文字にする */
+/* SS をレインボー（上→下）文字にする（赤を文字の見える位置まで拡大） */
 .status-SS {
   background: linear-gradient(
-    /* レインボーカラーを７色程度並べる例 */
     to bottom,
-    red,
-    orange,
-    yellow,
-    green,
-    blue,
-    indigo,
-    violet
+    red 0%,    /* 文字領域の0％位置／ここから赤 */
+    red 20%,   /* 文字領域の20％位置／赤をここまで */
+    orange 20%,/* 文字領域の20％位置／ここからオレンジ */
+    orange 35%,/* オレンジをここまで */
+    yellow 35%,/* ここから黄色 */
+    yellow 50%,/* 黄色をここまで */
+    green 50%, /* ここから緑 */
+    green 65%, /* 緑をここまで */
+    blue 65%,  /* ここから青 */
+    blue 80%,  /* 青をここまで */
+    indigo 80%,/* ここからインディゴ */
+    indigo 90%,/* インディゴをここまで */
+    violet 90%,/* ここからバイオレット */
+    violet 100%/* バイオレットを最後まで */
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: bold;
-  /* 太字にする場合 */
-  font-weight: bold;
 }
+
 
     .status-S { color: gold; font-weight: bold; }
     .status-A { color: red; font-weight: bold; }
