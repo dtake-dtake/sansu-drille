@@ -52,7 +52,7 @@
       { file: 'drills/九九.html', name: '九九', ns: 'multiplication_1to9_v6_', grade:'2年', category:'九九' }
     ];
 
-    const statusOrder = { 'S':5, 'A':4, 'B':3, 'C':2, 'D':1, '―':0 };
+    const statusOrder = { 'SS':6, 'S':5, 'A':4, 'B':3, 'C':2, 'D':1, '―':0 };
     const list = drills.map(d => {
       const hs = localStorage.getItem(d.ns + 'highScore') || '―';
       const clears = localStorage.getItem(d.ns + 'clearCount') || '0';
