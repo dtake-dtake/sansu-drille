@@ -82,7 +82,15 @@ let clearCount = 0;
 /* ===== ユーティリティ ===== */
 const rnd = (min,max)=>Math.floor(Math.random()*(max-min+1))+min;
 const nowDT = ()=>new Date().toLocaleString();
-const statusOf=s=>s>=150?"SS":s>=120?"S":s>=100?"A":s>=80?"B":s>=50?"C":"D";
+// 変更後：150点以上は "SS"、120点以上は "S" という判定にする
+const statusOf = s =>
+  s >= 150 ? "SS" :
+  s >= 120 ? "S"  :
+  s >= 100 ? "A"  :
+  s >=  80 ? "B"  :
+  s >=  50 ? "C"  :
+              "D";
+
 const scrollCenter = el=>el.scrollIntoView({behavior:"smooth",block:"center"});
 
 /* ===== storage ===== */
