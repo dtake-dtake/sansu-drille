@@ -62,7 +62,7 @@ const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.f
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const now = () => new Date().toLocaleString();
-const statusOf = s => s >= 120 ? "S" : s >= 100 ? "A" : s >= 80 ? "B" : s >= 50 ? "C" : "D";
+const statusOf = s => s >= s >= 150 ? "SS" : 120 ? "S" : s >= 100 ? "A" : s >= 80 ? "B" : s >= 50 ? "C" : "D";
 const scrollCenter = e => e.scrollIntoView({ behavior: "smooth", block: "center" });
 const ls = localStorage;
 
