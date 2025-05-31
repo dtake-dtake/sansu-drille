@@ -11,6 +11,25 @@
     th { background: #f5f5f5; cursor: pointer; user-select: none; }
     a { color: #0066cc; text-decoration: underline; }
     /* ステータス色設定 */
+    /* 追加部分：SS をレインボー（グラデーション）文字にする */
+  .status-SS {
+   background: linear-gradient(
+    /* レインボーカラーを７色程度並べる例 */
+    to right,
+    red,
+    orange,
+    yellow,
+    green,
+    blue,
+    indigo,
+    violet
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+  /* 太字にする場合 */
+  font-weight: bold;
+}
     .status-S { color: gold; font-weight: bold; }
     .status-A { color: red; font-weight: bold; }
     .status-B { color: green; font-weight: bold; }
